@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, Volume2, VolumeX, Maximize2, Sparkles, RefreshCw } from 'lucide-react';
+import { Play, RefreshCw } from 'lucide-react';
 
 interface VideoPlayerProps {
   moduleTitle: string;
   videoUrl?: string; // Optional real video URL (supports YouTube & Loom)
   durationString: string;
   accentColor: 'navy' | 'gold';
-  objectives: string[];
   onProgressUpdate?: (progress: number) => void; // Syncs playback percentage with checklist
 }
 
@@ -15,19 +14,23 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   videoUrl,
   durationString,
   accentColor,
-  objectives,
   onProgressUpdate
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [isMuted, setIsMuted] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  // Helper to check if it's a local video file
+  const isLocalVideoFile = (url?: string): boolean => {
+    if (!url) return false;
+    return /\.(mp4|webm|ogg|mov)$/i.test(url);
+  };
 
   // Helper to parse YouTube Video ID from various link formats
   const getYouTubeId = (url?: string): string | null => {
     if (!url) return null;
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
     const match = url.match(regExp);
     return (match && match[2].length === 11) ? match[2] : null;
   };
@@ -36,11 +39,12 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const getLoomEmbedUrl = (url?: string): string | null => {
     if (!url) return null;
     const match = url.match(/(?:loom\.com\/(?:share|embed)\/)([a-f0-9]+)/i);
-    return match ? `https://www.loom.com/embed/${match[1]}?autoplay=1&mute=${isMuted ? 1 : 0}` : null;
+    return match ? `https://www.loom.com/embed/${match[1]}?autoplay=1` : null;
   };
 
   const youtubeId = getYouTubeId(videoUrl);
   const loomEmbedUrl = getLoomEmbedUrl(videoUrl);
+  const isLocalVideo = isLocalVideoFile(videoUrl);
 
   // Parse duration "Xm Ys" into total seconds
   const parseDuration = (dur: string): number => {
@@ -58,17 +62,18 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   const totalSeconds = parseDuration(durationString);
 
-  // Timer loop for progress bar and active objectives tracking
+  // Timer loop for progress bar and active objectives tracking (for mock player)
   useEffect(() => {
-    if (isPlaying) {
+    if (isPlaying && !isLocalVideo) {
       intervalRef.current = setInterval(() => {
-        setCurrentTime(prev => {
-          if (prev >= totalSeconds) {
+        // Mock player simulation - just update progress
+        setProgress(prev => {
+          if (prev >= 100) {
             setIsPlaying(false);
             if (intervalRef.current) clearInterval(intervalRef.current);
-            return 0;
+            return 100;
           }
-          return prev + 1;
+          return prev + (100 / parseDuration(durationString));
         });
       }, 1000);
     } else {
@@ -82,55 +87,31 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         clearInterval(intervalRef.current);
       }
     };
-  }, [isPlaying, totalSeconds]);
-
-  useEffect(() => {
-    const currentProgress = (currentTime / totalSeconds) * 100;
-    setProgress(currentProgress);
-    if (onProgressUpdate) {
-      onProgressUpdate(currentProgress);
-    }
-  }, [currentTime, totalSeconds, onProgressUpdate]);
-
-  const formatTime = (secs: number): string => {
-    const m = Math.floor(secs / 60);
-    const s = Math.floor(secs % 60);
-    return `${m}:${s < 10 ? '0' : ''}${s}`;
-  };
+  }, [isPlaying, isLocalVideo, durationString]);
 
   const handlePlayToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (isLocalVideo && videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+    }
     setIsPlaying(!isPlaying);
-  };
-
-  const handleMuteToggle = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsMuted(!isMuted);
-  };
-
-  const handleScrub = (e: React.MouseEvent<HTMLDivElement>) => {
-    e.stopPropagation();
-    const rect = e.currentTarget.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const width = rect.width;
-    const newPercentage = Math.min(Math.max((clickX / width), 0), 1);
-    setCurrentTime(Math.floor(newPercentage * totalSeconds));
   };
 
   const handleRestart = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setCurrentTime(0);
     setProgress(0);
+    if (isLocalVideo && videoRef.current) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.play();
+    }
     setIsPlaying(true);
   };
 
-  // Determine current active objective based on progress
-  const activeObjectiveIndex = Math.min(
-    Math.floor((progress / 100) * objectives.length),
-    objectives.length - 1
-  );
-
-  const hasEmbeddedVideo = youtubeId || loomEmbedUrl;
+  const hasEmbeddedVideo = youtubeId || loomEmbedUrl || isLocalVideo;
 
   return (
     <div className="relative group w-full aspect-video rounded-lg overflow-hidden bg-slate-950 border border-white/5 select-none">
@@ -140,7 +121,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         <div className="absolute inset-0 w-full h-full">
           <iframe
             className="w-full h-full border-0"
-            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&controls=1&rel=0&showinfo=0&mute=${isMuted ? 1 : 0}`}
+            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&controls=1&rel=0&showinfo=0`}
             title={moduleTitle}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
@@ -161,7 +142,31 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         </div>
       )}
 
-      {/* 3. DYNAMIC EQUALIZER BACKGROUND (For mock player OR poster frame before playing embed) */}
+      {/* 3. LOCAL VIDEO PLAYER */}
+      {isPlaying && isLocalVideo && (
+        <video
+          ref={videoRef}
+          className="w-full h-full object-contain bg-slate-950"
+          src={videoUrl}
+          autoPlay
+          controls
+          onTimeUpdate={() => {
+            if (videoRef.current) {
+              const newProgress = (videoRef.current.currentTime / videoRef.current.duration) * 100;
+              setProgress(Math.min(newProgress, 100));
+              if (onProgressUpdate) {
+                onProgressUpdate(Math.min(newProgress, 100));
+              }
+            }
+          }}
+          onEnded={() => {
+            setIsPlaying(false);
+            setProgress(100);
+          }}
+        />
+      )}
+
+      {/* 4. DYNAMIC EQUALIZER BACKGROUND (For mock player OR poster frame before playing embed) */}
       {(!isPlaying || !hasEmbeddedVideo) && (
         <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
           {/* Glow Spheres */}
@@ -203,16 +208,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         </div>
       )}
 
-      {/* Subtitles Overlay (Overlay objectives that guide active progress) */}
-      {isPlaying && (
-        <div className="absolute top-3 left-3 right-3 px-3 py-1.5 rounded bg-black/75 backdrop-blur-sm border border-white/5 text-[11px] text-slate-350 flex items-center gap-1.5 animate-fade-in pointer-events-none z-10">
-          <Sparkles className={`w-3.5 h-3.5 flex-shrink-0 ${accentColor === 'gold' ? 'text-brand-gold' : 'text-blue-400'}`} />
-          <span className="truncate font-semibold">
-            {hasEmbeddedVideo ? `Sync Active Step ${activeObjectiveIndex + 1}: ` : `Step ${activeObjectiveIndex + 1}: `}
-            {objectives[activeObjectiveIndex]}
-          </span>
-        </div>
-      )}
 
       {/* Large Poster Play Button Overlay (Visible before starting playback) */}
       {!isPlaying && (
@@ -230,7 +225,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           </button>
           {hasEmbeddedVideo && (
             <div className="absolute bottom-4 text-[10px] text-slate-400 tracking-wide font-semibold bg-black/50 px-2.5 py-0.5 rounded border border-white/5">
-              Plays {youtubeId ? 'YouTube' : 'Loom'} video
+              Plays {isLocalVideo ? 'Local' : (youtubeId ? 'YouTube' : 'Loom')} video
             </div>
           )}
         </div>
@@ -248,62 +243,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
             <RefreshCw className="w-3.5 h-3.5" />
             Watch Again
           </button>
-        </div>
-      )}
-
-      {/* Sleek Custom Glass controls HUD (Visible on hover; hidden for video API embeds when playing) */}
-      {(!hasEmbeddedVideo || !isPlaying) && (
-        <div className={`absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex flex-col gap-2 transition-all duration-300 z-10 transform ${
-          isPlaying ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0 group-hover:translate-y-0 group-hover:opacity-100'
-        }`}>
-          
-          {/* Scrub Bar */}
-          <div 
-            onClick={handleScrub}
-            className="h-1 w-full bg-white/20 rounded-full cursor-pointer relative group/scrub"
-          >
-            <div 
-              className={`h-full rounded-full relative transition-all duration-100 ${
-                accentColor === 'gold' ? 'bg-brand-gold' : 'bg-blue-450'
-              }`}
-              style={{ width: `${progress}%` }}
-            />
-            <div 
-              className="absolute top-1/2 w-3 h-3 rounded-full bg-white shadow -translate-y-1/2 opacity-0 group-hover/scrub:opacity-100 transition-opacity"
-              style={{ left: `calc(${progress}% - 6px)` }}
-            />
-          </div>
-
-          {/* Controls Details */}
-          <div className="flex items-center justify-between text-white/80 text-xs">
-            <div className="flex items-center gap-3">
-              <button 
-                onClick={handlePlayToggle}
-                className="hover:text-white transition-colors"
-              >
-                {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
-              </button>
-              <span>
-                {formatTime(currentTime)} <span className="opacity-40">/</span> {formatTime(totalSeconds)}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button 
-                onClick={handleMuteToggle}
-                className="hover:text-white transition-colors"
-              >
-                {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-              </button>
-              <button 
-                onClick={(e) => { e.stopPropagation(); alert('Fullscreen layout activated for ' + moduleTitle); }}
-                className="hover:text-white transition-colors"
-                title="Fullscreen"
-              >
-                <Maximize2 className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
         </div>
       )}
     </div>

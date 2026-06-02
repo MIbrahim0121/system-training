@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { trainingModules } from './data/modules';
 import { TrainingCard } from './components/TrainingCard';
+import zgLogo from './assets/zg-logo.png';
 
 function App() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -21,9 +22,7 @@ function App() {
   const filteredModules = useMemo(() => {
     return trainingModules.filter(module => {
       const matchesSearch = 
-        module.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        module.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        module.objectives.some(obj => obj.toLowerCase().includes(searchQuery.toLowerCase()));
+        module.title.toLowerCase().includes(searchQuery.toLowerCase());
       
       const matchesCategory = selectedCategory === 'All' || module.category === selectedCategory;
       
@@ -45,8 +44,7 @@ function App() {
 
   // Metrics dashboard data calculations
   const categoriesList = ['All', 'Leads', 'Bookings', 'Quotes', 'Jobs'] as const;
-  const totalDuration = "84 mins";
-  const totalObjectives = trainingModules.reduce((acc, curr) => acc + curr.objectives.length, 0);
+  const totalDuration = "17 mins 59 secs";
 
   return (
     <div className="relative min-h-screen pb-20 overflow-hidden font-sans bg-[#05070c]">
@@ -55,6 +53,13 @@ function App() {
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-brand-navy/20 blur-[130px] pointer-events-none" />
       <div className="absolute top-[20%] right-[-10%] w-[45%] h-[45%] rounded-full bg-brand-gold/5 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] left-[25%] w-[50%] h-[50%] rounded-full bg-brand-navy/10 blur-[150px] pointer-events-none" />
+
+      {/* Top Navbar with Logo */}
+      <nav className="border-b border-white/5 py-4 relative z-10 bg-slate-950/30 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-center">
+          <img src={zgLogo} alt="ZG HighLevel Devs" className="h-24 w-auto object-contain" />
+        </div>
+      </nav>
 
       {/* Main Structural Container */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 relative z-10">
@@ -83,24 +88,12 @@ function App() {
               </div>
               <div>
                 <span className="block text-[9px] uppercase font-bold tracking-wider text-slate-400">Modules</span>
-                <span className="text-sm font-extrabold text-white">13 Stages</span>
+                <span className="text-sm font-extrabold text-white">9 Stages</span>
               </div>
             </div>
             
             <div className="w-[1px] bg-white/10 self-stretch" />
 
-            <div className="flex-1 flex items-center gap-2.5">
-              <div className="p-2 rounded-lg bg-white/5 border border-white/10 text-emerald-400">
-                <Layers className="w-4 h-4" />
-              </div>
-              <div>
-                <span className="block text-[9px] uppercase font-bold tracking-wider text-slate-400">Objectives</span>
-                <span className="text-sm font-extrabold text-white">{totalObjectives} Steps</span>
-              </div>
-            </div>
-            
-            <div className="w-[1px] bg-white/10 self-stretch" />
-            
             <div className="flex-1 flex items-center gap-2.5">
               <div className="p-2 rounded-lg bg-white/5 border border-white/10 text-blue-400">
                 <Clock className="w-4 h-4" />
@@ -142,7 +135,7 @@ function App() {
             </span>
             <input
               type="text"
-              placeholder="Search stages or objectives..."
+              placeholder="Search stages..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               id="search-input"
@@ -198,20 +191,25 @@ function App() {
       </main>
 
       {/* Modern Sleek Glass Footer */}
-      <footer className="mt-20 border-t border-white/5 pt-8 pb-4 text-center relative z-10">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-1.5 text-xs text-slate-400">
-            <Award className="w-4 h-4 text-brand-gold" />
-            <span>© 2026 Bramely & Stone Operations. All rights reserved.</span>
-          </div>
-          <div className="flex items-center gap-3 text-xs text-slate-500">
-            <span className="flex items-center gap-1">
-              <Code className="w-3.5 h-3.5 text-blue-400/80" /> React 19 + TypeScript
-            </span>
-            <span className="opacity-30">•</span>
-            <span className="flex items-center gap-1">
-              <Layers className="w-3.5 h-3.5 text-brand-gold/80" /> Tailwind v4
-            </span>
+      <footer className="mt-20 border-t border-white/5 pt-12 pb-8 relative z-10">
+        <div className="max-w-7xl mx-auto px-8 lg:px-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 text-center md:text-left">
+            {/* Contact Section */}
+            <div className="flex flex-col gap-2">
+              <h3 className="font-semibold text-white text-sm">Contact Us</h3>
+              <div className="flex flex-col gap-1 text-xs text-slate-400">
+                <a href="mailto:support@zghighlevels.com" className="hover:text-brand-gold transition-colors">zghighleveldevs@gmail.com</a>
+                <a href="tel:+923104168315" className="hover:text-brand-gold transition-colors">(92) 310-416-8315</a>
+              </div>
+            </div>
+
+            {/* Copyright Section */}
+            <div className="flex items-center justify-center md:justify-end">
+              <div className="flex items-center gap-2 text-xs text-slate-400">
+                <Award className="w-4 h-4 text-brand-gold flex-shrink-0" />
+                <span>© 2026 ZGHighLevelDevs. All rights reserved.</span>
+              </div>
+            </div>
           </div>
         </div>
       </footer>

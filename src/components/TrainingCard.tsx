@@ -83,14 +83,8 @@ export const TrainingCard: React.FC<TrainingCardProps> = ({ module }) => {
             videoUrl={module.videoUrl}
             durationString={module.duration}
             accentColor={module.accentColor}
-            objectives={module.objectives}
           />
         </motion.div>
-
-        {/* Description Text */}
-        <motion.p variants={childVariants} className="text-xs text-slate-300 leading-relaxed mb-4 min-h-[48px]">
-          {module.description}
-        </motion.p>
       </div>
 
       {/* Footer Section */}
