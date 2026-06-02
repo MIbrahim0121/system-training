@@ -56,7 +56,7 @@ function App() {
       {/* Top Navbar with Logo */}
       <nav className="border-b border-white/5 py-4 relative z-10 bg-slate-950/30 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-center">
-          <img src={zgLogo} alt="ZG HighLevel Devs" className="h-24 w-auto object-contain" />
+          <img src={zgLogo} alt="ZG HighLevel Devs" className="h-16 w-auto object-contain" loading="lazy" />
         </div>
       </nav>
 

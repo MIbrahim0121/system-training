@@ -149,6 +149,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           src={videoUrl}
           autoPlay
           controls
+          preload="metadata"
           onTimeUpdate={() => {
             if (videoRef.current) {
               const newProgress = (videoRef.current.currentTime / videoRef.current.duration) * 100;

@@ -56,8 +56,8 @@ export const TrainingCard: React.FC<TrainingCardProps> = ({ module }) => {
           }`}>
             {module.category}
           </span>
-          <span className="text-[10px] font-semibold text-slate-400 flex items-center gap-1">
-            <Icons.Layers className="w-3 h-3 text-slate-500" />
+          <span className="text-[10px] font-bold text-white flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/5 border border-white/10">
+            <Icons.Layers className="w-3 h-3 text-brand-gold" />
             {module.difficulty}
           </span>
         </motion.div>
