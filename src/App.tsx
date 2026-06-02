@@ -6,9 +6,8 @@ import {
   BookOpen, 
   Clock, 
   Award, 
-  Layers, 
   HelpCircle,
-  Code
+  
 } from 'lucide-react';
 import { trainingModules } from './data/modules';
 import { TrainingCard } from './components/TrainingCard';
