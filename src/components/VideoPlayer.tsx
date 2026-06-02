@@ -60,7 +60,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     return seconds || 300; // default 5 minutes
   };
 
-  const totalSeconds = parseDuration(durationString);
 
   // Timer loop for progress bar and active objectives tracking (for mock player)
   useEffect(() => {
